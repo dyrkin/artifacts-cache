@@ -1,0 +1,20 @@
+variables:
+  CACHE_BUCKET_ID: "$CI_PROJECT_PATH-$CI_PIPELINE_ID"
+
+stages:
+  - test
+  - publish
+
+test:
+  stage: test
+  tags:
+    - docker
+  script:
+    - printenv
+
+publish:
+  stage: publish
+  tags:
+    - docker
+  script:
+    - printenv
