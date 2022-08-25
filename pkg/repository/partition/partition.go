@@ -25,9 +25,13 @@ const (
 	MaxPartitionSize = 100 * 1024 * 1024 //100MB
 )
 
+type ContentWriter interface {
+	WriteContent(key string, content io.Reader) error
+}
+
 type Partition interface {
+	ContentWriter
 	Open() error
-	WriteContent(key string, content io.WriterTo) error
 	Close() error
 	IsClosed() bool
 }
@@ -88,9 +92,9 @@ func (p *partition) Open() error {
 	return nil
 }
 
-func (p *partition) WriteContent(key string, content io.WriterTo) error {
+func (p *partition) WriteContent(key string, content io.Reader) error {
 	begin := p.offset
-	size, err := content.WriteTo(p.file)
+	size, err := io.Copy(p.file, content)
 	p.offset += size
 	if err != nil {
 		return fmt.Errorf("%w. %s", CantWriteContentToPartitionError, err)

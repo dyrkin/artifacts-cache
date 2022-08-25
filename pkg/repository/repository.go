@@ -16,7 +16,7 @@ var (
 )
 
 type Repository interface {
-	WriteContent(key string, content io.WriterTo) error
+	WriteContent(key string, content io.Reader) error
 }
 
 type repository struct {
@@ -34,7 +34,7 @@ func NewRepository(baseDir basedir.BaseDir, index index.Index) *repository {
 	}
 }
 
-func (r *repository) WriteContent(key string, content io.WriterTo) error {
+func (r *repository) WriteContent(key string, content io.Reader) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	err := r.recreatePartition()
