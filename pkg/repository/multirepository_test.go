@@ -48,7 +48,7 @@ type mockRepository struct {
 	wg *sync.WaitGroup
 }
 
-func (m *mockRepository) WriteContent(key string, content io.WriterTo) error {
+func (m *mockRepository) WriteContent(key string, content io.Reader) error {
 	log.Info().Msgf("processing: %s by %d", key, m.id)
 	time.Sleep(jobDuration)
 	m.wg.Done()
