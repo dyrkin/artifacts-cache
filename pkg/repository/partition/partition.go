@@ -9,7 +9,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"sync"
 )
 
 var (
@@ -26,6 +25,13 @@ const (
 	MaxPartitionSize = 100 * 1024 * 1024 //100MB
 )
 
+type Partition interface {
+	Open() error
+	WriteContent(key string, content io.WriterTo) error
+	Close() error
+	IsClosed() bool
+}
+
 type partition struct {
 	offset      int64
 	uuid        string
@@ -33,7 +39,6 @@ type partition struct {
 	index       index.Index
 	transaction index.Transaction
 	file        *os.File
-	mutex       *sync.Mutex
 	partitionId int64
 	closed      bool
 }
@@ -44,13 +49,10 @@ func NewPartition(uuid string, baseDir basedir.BaseDir, index index.Index) *part
 		uuid:    uuid,
 		baseDir: baseDir,
 		index:   index,
-		mutex:   &sync.Mutex{},
 	}
 }
 
 func (p *partition) Open() error {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
 	dir, err := p.baseDir.MakeSubdirByUUID(p.uuid)
 	if err != nil {
 		return fmt.Errorf("%w. %s", CantCreatePartitionDirError, err)
@@ -87,8 +89,6 @@ func (p *partition) Open() error {
 }
 
 func (p *partition) WriteContent(key string, content io.WriterTo) error {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
 	begin := p.offset
 	size, err := content.WriteTo(p.file)
 	p.offset += size
@@ -106,8 +106,6 @@ func (p *partition) WriteContent(key string, content io.WriterTo) error {
 }
 
 func (p *partition) Close() (err error) {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
 	if p.file != nil {
 		file.CloseQuiet(p.file)
 	}
@@ -119,7 +117,5 @@ func (p *partition) Close() (err error) {
 }
 
 func (p *partition) IsClosed() bool {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
 	return p.closed
 }
