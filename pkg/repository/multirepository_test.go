@@ -49,7 +49,6 @@ type mockRepository struct {
 }
 
 func (m *mockRepository) WriteContent(key string, content io.WriterTo) error {
-	log.Info().Msgf("processing: %s by %d", key, m.id)
 	time.Sleep(jobDuration)
 	m.wg.Done()
 	return nil
