@@ -16,7 +16,7 @@ var (
 )
 
 type Repository interface {
-	WriteContent(key string, content io.Reader) error
+	partition.ContentWriter
 }
 
 type repository struct {

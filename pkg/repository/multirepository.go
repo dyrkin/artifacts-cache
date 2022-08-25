@@ -19,7 +19,7 @@ func NewMultiRepository(repositoryFactory Factory, limitThreads int) *multiRepos
 	}
 }
 
-func (r *multiRepository) WriteContent(key string, content io.WriterTo) error {
+func (r *multiRepository) WriteContent(key string, content io.Reader) error {
 	worker := <-r.workers
 	err := worker.WriteContent(key, content)
 	r.workers <- worker
