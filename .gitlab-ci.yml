@@ -3,18 +3,12 @@ variables:
 
 stages:
   - test
-  - publish
 
 test:
+  image: golang:1.19
   stage: test
   tags:
     - docker
   script:
-    - printenv
-
-publish:
-  stage: publish
-  tags:
-    - docker
-  script:
-    - printenv
+    - go mod download
+    - go test ./...
