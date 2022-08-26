@@ -15,7 +15,7 @@ var (
 	CantCreatePartitionDirError      = errors.New("can't create directory for partition")
 	CantCreatePartitionFileError     = errors.New("can't create partition")
 	CantCreateTransactionError       = errors.New("can't create transaction")
-	CantOpenPartitionFileError       = errors.New("partition exists in index, but we can't open partition file")
+	CantOpenPartitionFileError       = errors.New("partition exists in index, but partition file can not be found")
 	CantAddPartitionToIndexError     = errors.New("can't add partition to index")
 	CantAddContentKeyToIndexError    = errors.New("can't add content key to index")
 	CantWriteContentToPartitionError = errors.New("can't write content to partition")
@@ -41,7 +41,6 @@ type partition struct {
 	uuid        string
 	baseDir     basedir.BaseDir
 	index       index.Index
-	transaction index.Transaction
 	file        *os.File
 	partitionId int64
 	closed      bool
@@ -74,13 +73,12 @@ func (p *partition) Open() error {
 		if err != nil {
 			return fmt.Errorf("%w. %s", CantCreatePartitionFileError, err)
 		}
-		p.transaction, err = p.index.CreateTransaction()
 		if err != nil {
 			file.CloseQuiet(partitionFile)
 			file.RemoveQuiet(location)
 			return fmt.Errorf("%w. %s", CantCreateTransactionError, err)
 		}
-		partitionId, err := p.transaction.AddPartition(p.uuid)
+		partitionId, err := p.index.AddPartition(p.uuid)
 		if err != nil {
 			file.CloseQuiet(partitionFile)
 			file.RemoveQuiet(location)
@@ -99,7 +97,7 @@ func (p *partition) WriteContent(key string, content io.Reader) error {
 	if err != nil {
 		return fmt.Errorf("%w. %s", CantWriteContentToPartitionError, err)
 	}
-	err = p.transaction.AddFileToPartition(key, p.partitionId, begin, size)
+	err = p.index.AddFileToPartition(key, p.partitionId, begin, size)
 	if err != nil {
 		return fmt.Errorf("%w. %s", CantAddContentKeyToIndexError, err)
 	}
@@ -112,9 +110,6 @@ func (p *partition) WriteContent(key string, content io.Reader) error {
 func (p *partition) Close() (err error) {
 	if p.file != nil {
 		file.CloseQuiet(p.file)
-	}
-	if p.transaction != nil {
-		err = p.transaction.Commit()
 	}
 	p.closed = true
 	return err

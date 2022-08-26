@@ -14,7 +14,7 @@ type factory struct {
 	index   index.Index
 }
 
-func NewFactory(baseDir basedir.BaseDir, index index.Index) *factory {
+func NewRepositoryFactory(baseDir basedir.BaseDir, index index.Index) *factory {
 	return &factory{
 		baseDir: baseDir,
 		index:   index,

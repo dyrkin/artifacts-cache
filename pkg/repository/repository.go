@@ -48,6 +48,7 @@ func (r *repository) recreatePartition() error {
 	if r.partition == nil || r.partition.IsClosed() {
 		uuId := uuid.New().String()
 		r.partition = partition.NewPartition(uuId, r.baseDir, r.index)
+		return r.partition.Open()
 	}
 	return nil
 }

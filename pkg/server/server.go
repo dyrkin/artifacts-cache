@@ -30,10 +30,13 @@ func (s *server) pushHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	content := r.Body
+	defer content.Close()
 	err := s.repository.WriteContent(key, content)
 	if err != nil {
-		log.Error().Msgf("can't save content for key [%s] to repository. error [%s]", key, err)
+		msg := fmt.Sprintf("can't save content for key [%s] to repository. error [%s]", key, err)
+		log.Error().Msg(msg)
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, msg)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
