@@ -13,6 +13,7 @@ import (
 
 var (
 	CantCreatePartitionDirError      = errors.New("can't create directory for partition")
+	CantCheckPartitionExistenceError = errors.New("can't check partition existence")
 	CantCreatePartitionFileError     = errors.New("can't create partition")
 	CantCreateTransactionError       = errors.New("can't create transaction")
 	CantOpenPartitionFileError       = errors.New("partition exists in index, but partition file can not be found")
@@ -61,7 +62,11 @@ func (p *partition) Open() error {
 		return fmt.Errorf("%w. %s", CantCreatePartitionDirError, err)
 	}
 	location := path.Join(dir, p.uuid)
-	if existingPartitionId, ok := p.index.PartitionExists(location); ok {
+	existingPartitionId, ok, err := p.index.PartitionExists(location)
+	if err != nil {
+		return fmt.Errorf("%w. %s", CantCheckPartitionExistenceError, err)
+	}
+	if ok {
 		partitionFile, err := file.Open(location)
 		if err != nil {
 			return fmt.Errorf("%w. %s", CantOpenPartitionFileError, err)
