@@ -11,6 +11,7 @@ import (
 var (
 	CantInitializeIndexError         = errors.New("can't initialize index")
 	CantCheckPartitionExistenceError = errors.New("can't check partition existence")
+	CantFindContentEmplacementError  = errors.New("can't find content emplacement")
 	CantAddFileToPartitionError      = errors.New("can't add file to partition")
 	CantAddPartitionError            = errors.New("can't add partition")
 	CantGetPartitionIdError          = errors.New("can't get partition id")
@@ -20,14 +21,16 @@ type Index interface {
 	AddPartition(uuid string) (int64, error)
 	AddFileToPartition(partitionId int64, subset string, name string, offset int64, size int64) error
 	PartitionExists(uuid string) (int64, bool, error)
+	FindContentEmplacement(subset string, filter string) (*ContentEmplacement, error)
 }
 
 type index struct {
-	database                    database.Database
-	addPartitionStatement       *sql.Stmt
-	addFileToPartitionStatement *sql.Stmt
-	partitionExistsStatement    *sql.Stmt
-	getPartitionIdStatement     *sql.Stmt
+	database                        database.Database
+	addPartitionStatement           *sql.Stmt
+	addFileToPartitionStatement     *sql.Stmt
+	partitionExistsStatement        *sql.Stmt
+	getPartitionIdStatement         *sql.Stmt
+	findContentEmplacementStatement *sql.Stmt
 }
 
 func NewIndex(database database.Database) *index {
@@ -45,6 +48,9 @@ func (i *index) Init() (err error) {
 		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
 	}
 	if i.getPartitionIdStatement, err = i.database.Statement("select id from partition where uuid = $1"); err != nil {
+		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
+	}
+	if i.findContentEmplacementStatement, err = i.database.Statement("select p.uuid, f.name, f.offset, f.size from partition p join file f on p.id = f.partition_id where f.subset = $1 and f.name like $2"); err != nil {
 		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
 	}
 	return nil
@@ -79,6 +85,26 @@ func (i *index) PartitionExists(uuid string) (int64, bool, error) {
 	} else {
 		return 0, false, fmt.Errorf("%w. [uuid: %s]. %s", CantCheckPartitionExistenceError, uuid, err)
 	}
+}
+
+func (i *index) FindContentEmplacement(subset string, filter string) (*ContentEmplacement, error) {
+	rows, err := i.findContentEmplacementStatement.Query(subset, filter)
+	if err != nil {
+		return nil, fmt.Errorf("%w. [subset: %s, filter: %s]. %s", CantFindContentEmplacementError, subset, filter, err)
+	}
+	defer rows.Close()
+	contentEmplacement := &ContentEmplacement{}
+	for rows.Next() {
+		emplacement := &Emplacement{}
+		if err := rows.Scan(&emplacement.Partition, &emplacement.Name, &emplacement.Offset, &emplacement.Size); err != nil {
+			return contentEmplacement, fmt.Errorf("%w. [subset: %s, filter: %s]. %s", CantFindContentEmplacementError, subset, filter, err)
+		}
+		contentEmplacement.Emplacements = append(contentEmplacement.Emplacements, emplacement)
+	}
+	if err = rows.Err(); err != nil {
+		return contentEmplacement, fmt.Errorf("%w. [subset: %s, filter: %s]. %s", CantFindContentEmplacementError, subset, filter, err)
+	}
+	return contentEmplacement, nil
 }
 
 func (i *index) GetPartitionId(uuid string) (int64, error) {

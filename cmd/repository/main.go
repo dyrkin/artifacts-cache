@@ -8,6 +8,7 @@ import (
 	"gitlab-cache/pkg/repository"
 	"gitlab-cache/pkg/repository/basedir"
 	"gitlab-cache/pkg/repository/index"
+	"gitlab-cache/pkg/repository/multipart"
 	"gitlab-cache/pkg/server"
 )
 
@@ -39,6 +40,7 @@ func main() {
 	if err != nil {
 		log.Fatal().Msgf("can't initialize index. error: %s", err)
 	}
-	repositoryFactory := repository.NewRepositoryFactory(bd, idx)
+	binaryStreamFactory := multipart.NewBinaryStreamFactory(bd)
+	repositoryFactory := repository.NewRepositoryFactory(bd, idx, binaryStreamFactory)
 	server.NewServer(8080, repository.NewMultiRepository(repositoryFactory, 5)).Serve()
 }

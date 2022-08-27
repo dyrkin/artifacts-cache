@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gitlab-cache/pkg/repository/basedir"
 	"gitlab-cache/pkg/repository/index"
+	"gitlab-cache/pkg/repository/multipart"
 	"gitlab-cache/pkg/repository/partition"
 	"io"
 	"sync"
@@ -13,24 +14,29 @@ import (
 
 var (
 	CantRecreatePartitionError = errors.New("can't recreate partition")
+	CantFindContentError       = errors.New("can't find content")
+	NoContentOnServerError     = errors.New("server has no content")
 )
 
 type Repository interface {
 	partition.ContentWriter
+	FindContent(subset, filter string) (io.ReadCloser, error)
 }
 
 type repository struct {
-	baseDir   basedir.BaseDir
-	index     index.Index
-	partition partition.Partition
-	mutex     *sync.Mutex
+	baseDir             basedir.BaseDir
+	index               index.Index
+	binaryStreamFactory *multipart.BinaryStreamFactory
+	partition           partition.Partition
+	mutex               *sync.Mutex
 }
 
-func NewRepository(baseDir basedir.BaseDir, index index.Index) *repository {
+func NewRepository(baseDir basedir.BaseDir, index index.Index, binaryStreamFactory *multipart.BinaryStreamFactory) *repository {
 	return &repository{
-		baseDir: baseDir,
-		index:   index,
-		mutex:   &sync.Mutex{},
+		baseDir:             baseDir,
+		index:               index,
+		binaryStreamFactory: binaryStreamFactory,
+		mutex:               &sync.Mutex{},
 	}
 }
 
@@ -42,6 +48,17 @@ func (r *repository) WriteContent(subset, name string, content io.Reader) error 
 		return fmt.Errorf("%w. %s", CantRecreatePartitionError, err)
 	}
 	return r.partition.WriteContent(subset, name, content)
+}
+
+func (r *repository) FindContent(subset, filter string) (io.ReadCloser, error) {
+	contentEmplacement, err := r.index.FindContentEmplacement(subset, filter)
+	if err != nil {
+		return nil, fmt.Errorf("%w. %s", CantFindContentError, err)
+	}
+	if len(contentEmplacement.Emplacements) == 0 {
+		return nil, NoContentOnServerError
+	}
+	return r.binaryStreamFactory.Create(contentEmplacement)
 }
 
 func (r *repository) recreatePartition() error {

@@ -25,3 +25,10 @@ func (r *multiRepository) WriteContent(subset string, name string, content io.Re
 	r.workers <- worker
 	return err
 }
+
+func (r *multiRepository) FindContent(subset, filter string) (io.ReadCloser, error) {
+	worker := <-r.workers
+	reader, err := worker.FindContent(subset, filter)
+	r.workers <- worker
+	return reader, err
+}
