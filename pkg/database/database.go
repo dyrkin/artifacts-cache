@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/lib/pq"
+	"gitlab-cache/pkg/database/migrations"
 )
 
 var (
@@ -16,6 +17,7 @@ type Database interface {
 	Select(statement *sql.Stmt, args ...any) (*sql.Rows, error)
 	Update(statement *sql.Stmt, args ...any) (sql.Result, error)
 	Statement(query string) (*sql.Stmt, error)
+	Migrate() error
 }
 
 type database struct {
@@ -46,4 +48,8 @@ func (d *database) Update(statement *sql.Stmt, args ...any) (sql.Result, error) 
 
 func (d *database) Statement(query string) (*sql.Stmt, error) {
 	return d.db.Prepare(query)
+}
+
+func (d *database) Migrate() error {
+	return migrations.MustMigrate(d.db)
 }

@@ -23,11 +23,15 @@ var (
 )
 
 const (
-	MaxPartitionSize = 100 * 1024 * 1024 //100MB
+	MaxPartitionSize = 500 * 1024 * 1024 //500MB
 )
 
 type ContentWriter interface {
-	WriteContent(key string, content io.Reader) error
+	WriteContent(subset string, name string, content io.Reader) error
+}
+
+type ContentOpener interface {
+	OpenContent(offset int64, size int64) io.ReadCloser
 }
 
 type Partition interface {
@@ -45,6 +49,11 @@ type partition struct {
 	file        *os.File
 	partitionId int64
 	closed      bool
+}
+
+type readCloser struct {
+	closer io.Closer
+	reader io.Reader
 }
 
 func NewPartition(uuid string, baseDir basedir.BaseDir, index index.Index) *partition {
@@ -95,14 +104,14 @@ func (p *partition) Open() error {
 	return nil
 }
 
-func (p *partition) WriteContent(key string, content io.Reader) error {
-	begin := p.offset
+func (p *partition) WriteContent(subset string, name string, content io.Reader) error {
+	offset := p.offset
 	size, err := io.Copy(p.file, content)
 	p.offset += size
 	if err != nil {
 		return fmt.Errorf("%w. %s", CantWriteContentToPartitionError, err)
 	}
-	err = p.index.AddFileToPartition(key, p.partitionId, begin, size)
+	err = p.index.AddFileToPartition(p.partitionId, subset, name, offset, size)
 	if err != nil {
 		return fmt.Errorf("%w. %s", CantAddContentKeyToIndexError, err)
 	}
@@ -110,6 +119,10 @@ func (p *partition) WriteContent(key string, content io.Reader) error {
 		return p.Close()
 	}
 	return nil
+}
+
+func (p *partition) OpenContent(offset int64, size int64) io.ReadCloser {
+	return &readCloser{p.file, io.NewSectionReader(p.file, offset, size)}
 }
 
 func (p *partition) Close() (err error) {
@@ -122,4 +135,12 @@ func (p *partition) Close() (err error) {
 
 func (p *partition) IsClosed() bool {
 	return p.closed
+}
+
+func (rc *readCloser) Read(p []byte) (n int, err error) {
+	return rc.reader.Read(p)
+}
+
+func (rc *readCloser) Close() error {
+	return rc.closer.Close()
 }

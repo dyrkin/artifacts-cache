@@ -21,7 +21,7 @@ func TestMultiRepository_WriteContent(t *testing.T) {
 	mr := NewMultiRepository(factory, limitThreads)
 	start := time.Now()
 	for i := 0; i < jobsCount; i++ {
-		go mr.WriteContent(fmt.Sprintf("hello-%d", i), nil)
+		go mr.WriteContent("subset", fmt.Sprintf("name-%d", i), nil)
 	}
 	factory.wg.Wait()
 	end := time.Now()
@@ -48,8 +48,8 @@ type mockRepository struct {
 	wg *sync.WaitGroup
 }
 
-func (m *mockRepository) WriteContent(key string, content io.Reader) error {
-	log.Info().Msgf("processing: %s by %d", key, m.id)
+func (m *mockRepository) WriteContent(subset string, name string, content io.Reader) error {
+	log.Info().Msgf("processing: %s from subset '%s' by %d", name, subset, m.id)
 	time.Sleep(jobDuration)
 	m.wg.Done()
 	return nil

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gitlab-cache/pkg/database"
+	"time"
 )
 
 var (
@@ -12,11 +13,12 @@ var (
 	CantCheckPartitionExistenceError = errors.New("can't check partition existence")
 	CantAddFileToPartitionError      = errors.New("can't add file to partition")
 	CantAddPartitionError            = errors.New("can't add partition")
+	CantGetPartitionIdError          = errors.New("can't get partition id")
 )
 
 type Index interface {
 	AddPartition(uuid string) (int64, error)
-	AddFileToPartition(key string, partitionId int64, begin int64, size int64) error
+	AddFileToPartition(partitionId int64, subset string, name string, offset int64, size int64) error
 	PartitionExists(uuid string) (int64, bool, error)
 }
 
@@ -36,7 +38,7 @@ func (i *index) Init() (err error) {
 	if i.addPartitionStatement, err = i.database.Statement("insert into partition (uuid, time) values ($1, $2)"); err != nil {
 		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
 	}
-	if i.addFileToPartitionStatement, err = i.database.Statement("insert into file (key, partition_id, begin, size) values ($1, $2, $3, $4)"); err != nil {
+	if i.addFileToPartitionStatement, err = i.database.Statement("insert into file (partition_id, subset, name, \"offset\", size) values ($1, $2, $3, $4, $5)"); err != nil {
 		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
 	}
 	if i.partitionExistsStatement, err = i.database.Statement("select uuid from partition where uuid = $1"); err != nil {
@@ -49,25 +51,27 @@ func (i *index) Init() (err error) {
 }
 
 func (i *index) AddPartition(uuid string) (int64, error) {
-	result, err := i.addPartitionStatement.Exec(uuid)
+	_, err := i.addPartitionStatement.Exec(uuid, time.Now())
 	if err != nil {
 		return 0, fmt.Errorf("%w. [uuid: %s]. %s", CantAddPartitionError, uuid, err)
 	}
-	return result.LastInsertId()
+	id, err := i.GetPartitionId(uuid)
+	if err != nil {
+		return 0, fmt.Errorf("%w. [uuid: %s]. %s", CantGetPartitionIdError, uuid, err)
+	}
+	return id, nil
 }
 
-func (i *index) AddFileToPartition(key string, partitionId int64, begin int64, size int64) error {
-	_, err := i.addFileToPartitionStatement.Exec(key, partitionId, begin, size)
+func (i *index) AddFileToPartition(partitionId int64, subset string, name string, offset int64, size int64) error {
+	_, err := i.addFileToPartitionStatement.Exec(partitionId, subset, name, offset, size)
 	if err != nil {
-		return fmt.Errorf("%w. [key: %s, partition: %d, begin: %d, size: %d]. %s", CantAddFileToPartitionError, key, partitionId, begin, size, err)
+		return fmt.Errorf("%w. [partition: %d, name: %s, offset: %d, size: %d]. %s", CantAddFileToPartitionError, partitionId, name, offset, size, err)
 	}
 	return nil
 }
 
 func (i *index) PartitionExists(uuid string) (int64, bool, error) {
-	row := i.getPartitionIdStatement.QueryRow(uuid)
-	var id int64
-	err := row.Scan(&id)
+	id, err := i.GetPartitionId(uuid)
 	if err == nil {
 		return id, true, nil
 	} else if err == sql.ErrNoRows {
@@ -75,4 +79,11 @@ func (i *index) PartitionExists(uuid string) (int64, bool, error) {
 	} else {
 		return 0, false, fmt.Errorf("%w. [uuid: %s]. %s", CantCheckPartitionExistenceError, uuid, err)
 	}
+}
+
+func (i *index) GetPartitionId(uuid string) (int64, error) {
+	row := i.getPartitionIdStatement.QueryRow(uuid)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }

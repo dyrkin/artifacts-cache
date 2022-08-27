@@ -24,19 +24,21 @@ func (s *server) Serve() error {
 }
 
 func (s *server) pushHandler(w http.ResponseWriter, r *http.Request) {
-	key := r.Header.Get("key")
-	if key == "" {
+	subset := r.Header.Get("subset")
+	name := r.Header.Get("name")
+	if subset == "" || name == "" {
 		w.WriteHeader(http.StatusBadRequest)
+		_, _ = fmt.Fprint(w, "name or subset header is empty")
 		return
 	}
 	content := r.Body
 	defer content.Close()
-	err := s.repository.WriteContent(key, content)
+	err := s.repository.WriteContent(subset, name, content)
 	if err != nil {
-		msg := fmt.Sprintf("can't save content for key [%s] to repository. error [%s]", key, err)
+		msg := fmt.Sprintf("can't save content for name [%s] to repository. error [%s]", name, err)
 		log.Error().Msg(msg)
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, msg)
+		_, _ = fmt.Fprint(w, msg)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

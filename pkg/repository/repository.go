@@ -34,14 +34,14 @@ func NewRepository(baseDir basedir.BaseDir, index index.Index) *repository {
 	}
 }
 
-func (r *repository) WriteContent(key string, content io.Reader) error {
+func (r *repository) WriteContent(subset, name string, content io.Reader) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	err := r.recreatePartition()
 	if err != nil {
 		return fmt.Errorf("%w. %s", CantRecreatePartitionError, err)
 	}
-	return r.partition.WriteContent(key, content)
+	return r.partition.WriteContent(subset, name, content)
 }
 
 func (r *repository) recreatePartition() error {
