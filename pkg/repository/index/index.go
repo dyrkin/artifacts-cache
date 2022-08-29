@@ -41,7 +41,7 @@ func (i *index) Init() (err error) {
 	if i.addPartitionStatement, err = i.database.Statement("insert into partition (uuid, time) values ($1, $2)"); err != nil {
 		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
 	}
-	if i.addFileToPartitionStatement, err = i.database.Statement("insert into file (partition_id, subset, name, \"offset\", size) values ($1, $2, $3, $4, $5)"); err != nil {
+	if i.addFileToPartitionStatement, err = i.database.Statement("insert into file (partition_id, subset, path, \"offset\", size) values ($1, $2, $3, $4, $5)"); err != nil {
 		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
 	}
 	if i.partitionExistsStatement, err = i.database.Statement("select uuid from partition where uuid = $1"); err != nil {
@@ -50,7 +50,7 @@ func (i *index) Init() (err error) {
 	if i.getPartitionIdStatement, err = i.database.Statement("select id from partition where uuid = $1"); err != nil {
 		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
 	}
-	if i.findContentEmplacementStatement, err = i.database.Statement("select p.uuid, f.name, f.offset, f.size from partition p join file f on p.id = f.partition_id where f.subset = $1 and f.name like $2"); err != nil {
+	if i.findContentEmplacementStatement, err = i.database.Statement("select p.uuid, f.path, f.offset, f.size from partition p join file f on p.id = f.partition_id where f.subset = $1 and f.name like $2"); err != nil {
 		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
 	}
 	return nil
@@ -96,7 +96,7 @@ func (i *index) FindContentEmplacement(subset string, filter string) (*ContentEm
 	contentEmplacement := &ContentEmplacement{}
 	for rows.Next() {
 		emplacement := &Emplacement{}
-		if err := rows.Scan(&emplacement.Partition, &emplacement.Name, &emplacement.Offset, &emplacement.Size); err != nil {
+		if err := rows.Scan(&emplacement.Partition, &emplacement.Path, &emplacement.Offset, &emplacement.Size); err != nil {
 			return contentEmplacement, fmt.Errorf("%w. [subset: %s, filter: %s]. %s", CantFindContentEmplacementError, subset, filter, err)
 		}
 		contentEmplacement.Emplacements = append(contentEmplacement.Emplacements, emplacement)

@@ -27,7 +27,7 @@ type binaryStream struct {
 
 type contentDescriptor struct {
 	content io.ReadCloser
-	name    string
+	path    string
 	size    int64
 }
 
@@ -39,21 +39,17 @@ func NewBinaryStreamFactory(baseDir basedir.BaseDir) *BinaryStreamFactory {
 
 func (c *BinaryStreamFactory) Create(contentEmplacement *index.ContentEmplacement) (io.ReadCloser, error) {
 	var contentDescriptors []*contentDescriptor
-	for _, descriptor := range contentEmplacement.Emplacements {
-		p := partition.NewReadOnlyPartition(descriptor.Partition, c.baseDir)
+	for _, emplacement := range contentEmplacement.Emplacements {
+		p := partition.NewReadOnlyPartition(emplacement.Partition, c.baseDir)
 		err := p.Open()
 		if err != nil {
 			return nil, fmt.Errorf("%w. %s", CantOpenPartitionError, err)
 		}
-		content := p.OpenContent(descriptor.Offset, descriptor.Size)
-		descriptor := &contentDescriptor{content: content, name: descriptor.Name, size: descriptor.Size}
+		content := p.OpenContent(emplacement.Offset, emplacement.Size)
+		descriptor := &contentDescriptor{content: content, path: emplacement.Path, size: emplacement.Size}
 		contentDescriptors = append(contentDescriptors, descriptor)
 	}
-	metaInfo := ""
-	for _, descriptor := range contentDescriptors {
-		metaInfo += fmt.Sprintf("%s:%d;", descriptor.name, descriptor.size)
-	}
-	metaInfo += "\n"
+	metaInfo := makeMetaInfo(contentDescriptors)
 	return &binaryStream{
 		contentDescriptors:           contentDescriptors,
 		contentDescriptorsForClosing: contentDescriptors,

@@ -2,7 +2,7 @@ package index
 
 type Emplacement struct {
 	Partition string
-	Name      string
+	Path      string
 	Offset    int64
 	Size      int64
 }

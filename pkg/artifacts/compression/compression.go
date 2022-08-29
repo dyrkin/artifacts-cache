@@ -46,7 +46,6 @@ func (c *compressor) Close() error {
 	_ = c.uncompressedDataWriter.Close()
 	_ = c.compressedDataReader.Close()
 	return nil
-
 }
 
 func DecompressingReader(reader io.Reader) (io.ReadCloser, error) {
