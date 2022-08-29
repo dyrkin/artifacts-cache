@@ -40,14 +40,14 @@ func NewRepository(baseDir basedir.BaseDir, index index.Index, binaryStreamFacto
 	}
 }
 
-func (r *repository) WriteContent(subset, name string, content io.Reader) error {
+func (r *repository) WriteContent(subset, path string, content io.Reader) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	err := r.recreatePartition()
 	if err != nil {
 		return fmt.Errorf("%w. %s", CantRecreatePartitionError, err)
 	}
-	return r.partition.WriteContent(subset, name, content)
+	return r.partition.WriteContent(subset, path, content)
 }
 
 func (r *repository) FindContent(subset, filter string) (io.ReadCloser, error) {

@@ -3,8 +3,8 @@ package partition
 import (
 	"errors"
 	"fmt"
-	"gitlab-cache/pkg/file"
 	"gitlab-cache/pkg/repository/basedir"
+	"gitlab-cache/pkg/repository/file"
 	"gitlab-cache/pkg/repository/index"
 	"io"
 	"os"
@@ -28,7 +28,7 @@ const (
 )
 
 type ContentWriter interface {
-	WriteContent(subset string, name string, content io.Reader) error
+	WriteContent(subset string, path string, content io.Reader) error
 }
 
 type ContentOpener interface {
@@ -123,7 +123,7 @@ func (p *partition) Open() error {
 	return nil
 }
 
-func (p *partition) WriteContent(subset string, name string, content io.Reader) error {
+func (p *partition) WriteContent(subset string, path string, content io.Reader) error {
 	if !p.readOnly {
 		offset := p.offset
 		size, err := io.Copy(p.file, content)
@@ -131,7 +131,7 @@ func (p *partition) WriteContent(subset string, name string, content io.Reader) 
 		if err != nil {
 			return fmt.Errorf("%w. %s", CantWriteContentToPartitionError, err)
 		}
-		err = p.index.AddFileToPartition(p.partitionId, subset, name, offset, size)
+		err = p.index.AddFileToPartition(p.partitionId, subset, path, offset, size)
 		if err != nil {
 			return fmt.Errorf("%w. %s", CantAddContentKeyToIndexError, err)
 		}

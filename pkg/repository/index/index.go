@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"gitlab-cache/pkg/database"
+	"gitlab-cache/pkg/repository/database"
 	"time"
 )
 
@@ -19,7 +19,7 @@ var (
 
 type Index interface {
 	AddPartition(uuid string) (int64, error)
-	AddFileToPartition(partitionId int64, subset string, name string, offset int64, size int64) error
+	AddFileToPartition(partitionId int64, subset string, path string, offset int64, size int64) error
 	PartitionExists(uuid string) (int64, bool, error)
 	FindContentEmplacement(subset string, filter string) (*ContentEmplacement, error)
 }
@@ -68,10 +68,10 @@ func (i *index) AddPartition(uuid string) (int64, error) {
 	return id, nil
 }
 
-func (i *index) AddFileToPartition(partitionId int64, subset string, name string, offset int64, size int64) error {
-	_, err := i.addFileToPartitionStatement.Exec(partitionId, subset, name, offset, size)
+func (i *index) AddFileToPartition(partitionId int64, subset string, path string, offset int64, size int64) error {
+	_, err := i.addFileToPartitionStatement.Exec(partitionId, subset, path, offset, size)
 	if err != nil {
-		return fmt.Errorf("%w. [partition: %d, name: %s, offset: %d, size: %d]. %s", CantAddFileToPartitionError, partitionId, name, offset, size, err)
+		return fmt.Errorf("%w. [partition: %d, path: %s, offset: %d, size: %d]. %s", CantAddFileToPartitionError, partitionId, path, offset, size, err)
 	}
 	return nil
 }

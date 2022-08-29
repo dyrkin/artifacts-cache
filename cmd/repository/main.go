@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gitlab-cache/pkg/database"
 	"gitlab-cache/pkg/repository"
 	"gitlab-cache/pkg/repository/basedir"
+	"gitlab-cache/pkg/repository/database"
 	"gitlab-cache/pkg/repository/index"
 	"gitlab-cache/pkg/repository/multipart"
-	"gitlab-cache/pkg/server"
+	"gitlab-cache/pkg/repository/server"
 )
 
 const (
@@ -42,5 +42,6 @@ func main() {
 	}
 	binaryStreamFactory := multipart.NewBinaryStreamFactory(bd)
 	repositoryFactory := repository.NewRepositoryFactory(bd, idx, binaryStreamFactory)
-	server.NewServer(8080, repository.NewMultiRepository(repositoryFactory, 5)).Serve()
+	multiRepository := repository.NewMultiRepository(repositoryFactory, 5)
+	server.NewServer(8080, multiRepository).Serve()
 }

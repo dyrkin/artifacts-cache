@@ -5,30 +5,30 @@ import (
 )
 
 type multiRepository struct {
-	workers chan Repository
+	writeRepositories chan Repository
+	readRepository    Repository
 }
 
 func NewMultiRepository(repositoryFactory Factory, limitThreads int) *multiRepository {
-	workers := make(chan Repository, limitThreads+5)
+	writeRepositories := make(chan Repository, limitThreads+1)
 
 	for i := 0; i < limitThreads; i++ {
-		workers <- repositoryFactory.Create()
+		writeRepositories <- repositoryFactory.Create()
 	}
+	readRepository := repositoryFactory.Create()
 	return &multiRepository{
-		workers: workers,
+		writeRepositories: writeRepositories,
+		readRepository:    readRepository,
 	}
 }
 
-func (r *multiRepository) WriteContent(subset string, name string, content io.Reader) error {
-	worker := <-r.workers
-	err := worker.WriteContent(subset, name, content)
-	r.workers <- worker
+func (r *multiRepository) WriteContent(subset string, path string, content io.Reader) error {
+	repository := <-r.writeRepositories
+	err := repository.WriteContent(subset, path, content)
+	r.writeRepositories <- repository
 	return err
 }
 
 func (r *multiRepository) FindContent(subset, filter string) (io.ReadCloser, error) {
-	worker := <-r.workers
-	reader, err := worker.FindContent(subset, filter)
-	r.workers <- worker
-	return reader, err
+	return r.readRepository.FindContent(subset, filter)
 }

@@ -27,17 +27,17 @@ func (s *server) Serve() error {
 
 func (s *server) pushHandler(w http.ResponseWriter, r *http.Request) {
 	subset := r.Header.Get("subset")
-	name := r.Header.Get("name")
-	if subset == "" || name == "" {
+	path := r.Header.Get("path")
+	if subset == "" || path == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		_, _ = fmt.Fprint(w, "name or subset header is empty")
+		_, _ = fmt.Fprint(w, "path or subset header is empty")
 		return
 	}
 	content := r.Body
 	defer content.Close()
-	err := s.repository.WriteContent(subset, name, content)
+	err := s.repository.WriteContent(subset, path, content)
 	if err != nil {
-		msg := fmt.Sprintf("can't save content for name [%s] to repository. error [%s]", name, err)
+		msg := fmt.Sprintf("can't save content for path [%s] to repository. error [%s]", path, err)
 		log.Error().Msg(msg)
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = fmt.Fprint(w, msg)
@@ -65,6 +65,7 @@ func (s *server) pullHandler(w http.ResponseWriter, r *http.Request) {
 		_, _ = fmt.Fprint(w, msg)
 		return
 	} else {
+		w.Header().Set("Content-Type", "application/octet-stream")
 		defer content.Close()
 		_, _ = io.Copy(w, content)
 	}

@@ -48,8 +48,13 @@ type mockRepository struct {
 	wg *sync.WaitGroup
 }
 
-func (m *mockRepository) WriteContent(subset string, name string, content io.Reader) error {
-	log.Info().Msgf("processing: %s from subset '%s' by %d", name, subset, m.id)
+func (m *mockRepository) FindContent(subset, filter string) (io.ReadCloser, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *mockRepository) WriteContent(subset string, path string, content io.Reader) error {
+	log.Info().Msgf("processing: %s from subset '%s' by %d", path, subset, m.id)
 	time.Sleep(jobDuration)
 	m.wg.Done()
 	return nil

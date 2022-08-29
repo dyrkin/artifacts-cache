@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/lib/pq"
-	"gitlab-cache/pkg/database/migrations"
+	"gitlab-cache/pkg/repository/database/migrations"
 )
 
 var (
