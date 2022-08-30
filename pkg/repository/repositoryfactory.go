@@ -1,9 +1,9 @@
 package repository
 
 import (
+	"gitlab-cache/pkg/multipart"
 	"gitlab-cache/pkg/repository/basedir"
 	"gitlab-cache/pkg/repository/index"
-	"gitlab-cache/pkg/repository/multipart"
 )
 
 type Factory interface {
@@ -13,10 +13,10 @@ type Factory interface {
 type factory struct {
 	baseDir             basedir.BaseDir
 	index               index.Index
-	binaryStreamFactory *multipart.BinaryStreamFactory
+	binaryStreamFactory multipart.BinaryStreamOutFactory
 }
 
-func NewRepositoryFactory(baseDir basedir.BaseDir, index index.Index, binaryStreamFactory *multipart.BinaryStreamFactory) *factory {
+func NewRepositoryFactory(baseDir basedir.BaseDir, index index.Index, binaryStreamFactory multipart.BinaryStreamOutFactory) *factory {
 	return &factory{
 		baseDir:             baseDir,
 		index:               index,

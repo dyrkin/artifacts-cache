@@ -16,7 +16,7 @@ func Test_makeMetaInfo(t *testing.T) {
 		},
 	}
 
-	metaInfo := makeMetaInfo(contentDescriptors)
+	metaInfo := MakeMetaInfo(contentDescriptors)
 	if metaInfo != "path/file1:1;path/file2:2\n" {
 		t.Errorf("Expected metaInfo to be 'path/file1:1;path/file2:2\n', but got '%s'", metaInfo)
 	}

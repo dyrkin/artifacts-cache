@@ -55,9 +55,15 @@ func push(cwd string, subset string, pattern string, repositories []string) {
 		}
 		rotator := url.NewUrlRotator(repositories)
 		limitThreads := len(repositories) * 3
-		artifacts.NewUploader(client.NewRepositoryClient(rotator), limitThreads).Upload(cwd, subset, paths)
+		artifacts.NewPusher(client.NewPushRepositoryClient(rotator), limitThreads).Push(cwd, subset, paths)
 		log.Info().Msgf("uploaded %d files", len(paths))
 	}
+}
+
+func pull(cwd string, subset string, pattern string, repositories []string) {
+	rotator := url.NewUrlRotator(repositories)
+	limitThreads := len(repositories) * 3
+	artifacts.NewPuller(client.NewPullRepositoryClient(rotator), limitThreads).Pull(cwd, subset, pattern)
 }
 
 func findFiles(cwd string, pattern string) ([]string, error) {
@@ -66,8 +72,4 @@ func findFiles(cwd string, pattern string) ([]string, error) {
 		return file.FindFilesInDir(p)
 	}
 	return filepath.Glob(p)
-}
-
-func pull(cwd string, subset string, pattern string, repositories []string) {
-
 }

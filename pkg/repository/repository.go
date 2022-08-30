@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"gitlab-cache/pkg/multipart"
 	"gitlab-cache/pkg/repository/basedir"
 	"gitlab-cache/pkg/repository/index"
-	"gitlab-cache/pkg/repository/multipart"
 	"gitlab-cache/pkg/repository/partition"
 	"io"
 	"sync"
@@ -26,12 +26,12 @@ type Repository interface {
 type repository struct {
 	baseDir             basedir.BaseDir
 	index               index.Index
-	binaryStreamFactory *multipart.BinaryStreamFactory
+	binaryStreamFactory multipart.BinaryStreamOutFactory
 	partition           partition.Partition
 	mutex               *sync.Mutex
 }
 
-func NewRepository(baseDir basedir.BaseDir, index index.Index, binaryStreamFactory *multipart.BinaryStreamFactory) *repository {
+func NewRepository(baseDir basedir.BaseDir, index index.Index, binaryStreamFactory multipart.BinaryStreamOutFactory) *repository {
 	return &repository{
 		baseDir:             baseDir,
 		index:               index,

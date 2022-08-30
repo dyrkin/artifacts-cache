@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gitlab-cache/pkg/artifacts/client/url"
-	"gitlab-cache/pkg/artifacts/compression"
+	"gitlab-cache/pkg/compression"
 	"gitlab-cache/pkg/file"
 	"io"
 	"net/http"
@@ -14,25 +14,24 @@ import (
 var (
 	CantOpenFileError                  = errors.New("can't open file")
 	CantCreatePostRequestError         = errors.New("can't create post request")
-	CantSendFileToRepositoryError      = errors.New("can't send file to repository")
 	InvalidResponseFromRepositoryError = errors.New("invalid response from repository")
 )
 
-type RepositoryClient interface {
+type PushRepositoryClient interface {
 	Push(cwd string, subset string, path string) error
 }
 
-type repositoryClient struct {
+type pushRepositoryClient struct {
 	repositoryUrlRotator url.Rotator
 }
 
-func NewRepositoryClient(repositoryUrlRotator url.Rotator) *repositoryClient {
-	return &repositoryClient{
+func NewPushRepositoryClient(repositoryUrlRotator url.Rotator) *pushRepositoryClient {
+	return &pushRepositoryClient{
 		repositoryUrlRotator: repositoryUrlRotator,
 	}
 }
 
-func (c *repositoryClient) Push(cwd string, subset string, path string) error {
+func (c *pushRepositoryClient) Push(cwd string, subset string, path string) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("%w. %s", CantOpenFileError, err)

@@ -14,11 +14,15 @@ var (
 	CantOpenPartitionError = errors.New("can't open partition")
 )
 
-type BinaryStreamFactory struct {
+type BinaryStreamOutFactory interface {
+	Create(contentEmplacement *index.ContentEmplacement) (io.ReadCloser, error)
+}
+
+type binaryStreamOutFactory struct {
 	baseDir basedir.BaseDir
 }
 
-type binaryStream struct {
+type binaryStreamOut struct {
 	contentDescriptors           []*contentDescriptor
 	contentDescriptorsForClosing []*contentDescriptor
 	metaPushed                   bool
@@ -31,13 +35,13 @@ type contentDescriptor struct {
 	size    int64
 }
 
-func NewBinaryStreamFactory(baseDir basedir.BaseDir) *BinaryStreamFactory {
-	return &BinaryStreamFactory{
+func NewBinaryStreamOutFactory(baseDir basedir.BaseDir) *binaryStreamOutFactory {
+	return &binaryStreamOutFactory{
 		baseDir: baseDir,
 	}
 }
 
-func (c *BinaryStreamFactory) Create(contentEmplacement *index.ContentEmplacement) (io.ReadCloser, error) {
+func (c *binaryStreamOutFactory) Create(contentEmplacement *index.ContentEmplacement) (io.ReadCloser, error) {
 	var contentDescriptors []*contentDescriptor
 	for _, emplacement := range contentEmplacement.Emplacements {
 		p := partition.NewReadOnlyPartition(emplacement.Partition, c.baseDir)
@@ -49,15 +53,15 @@ func (c *BinaryStreamFactory) Create(contentEmplacement *index.ContentEmplacemen
 		descriptor := &contentDescriptor{content: content, path: emplacement.Path, size: emplacement.Size}
 		contentDescriptors = append(contentDescriptors, descriptor)
 	}
-	metaInfo := makeMetaInfo(contentDescriptors)
-	return &binaryStream{
+	metaInfo := MakeMetaInfo(contentDescriptors)
+	return &binaryStreamOut{
 		contentDescriptors:           contentDescriptors,
 		contentDescriptorsForClosing: contentDescriptors,
-		meta:                         bytes.NewBufferString(metaInfo),
+		meta:                         bytes.NewBufferString(metaInfo + "\n"),
 	}, nil
 }
 
-func (b *binaryStream) Read(p []byte) (n int, err error) {
+func (b *binaryStreamOut) Read(p []byte) (n int, err error) {
 	n, err = b.meta.Read(p)
 	if err != io.EOF {
 		return
@@ -77,7 +81,7 @@ func (b *binaryStream) Read(p []byte) (n int, err error) {
 	return 0, nil
 }
 
-func (b *binaryStream) Close() error {
+func (b *binaryStreamOut) Close() error {
 	for _, descriptor := range b.contentDescriptorsForClosing {
 		descriptor.content.Close()
 	}

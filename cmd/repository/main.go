@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"gitlab-cache/pkg/multipart"
 	"gitlab-cache/pkg/repository"
 	"gitlab-cache/pkg/repository/basedir"
 	"gitlab-cache/pkg/repository/database"
 	"gitlab-cache/pkg/repository/index"
-	"gitlab-cache/pkg/repository/multipart"
 	"gitlab-cache/pkg/repository/server"
 )
 
@@ -39,7 +39,7 @@ func main() {
 	if err != nil {
 		log.Fatal().Msgf("can't initialize index. error: %s", err)
 	}
-	binaryStreamFactory := multipart.NewBinaryStreamFactory(bd)
+	binaryStreamFactory := multipart.NewBinaryStreamOutFactory(bd)
 	repositoryFactory := repository.NewRepositoryFactory(bd, idx, binaryStreamFactory)
 	multiRepository := repository.NewMultiRepository(repositoryFactory, 5)
 	server.NewServer(8080, multiRepository).Serve()
