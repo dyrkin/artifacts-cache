@@ -1,10 +1,10 @@
 package server
 
 import (
+	"artifacts-cache/pkg/repository"
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"gitlab-cache/pkg/repository"
 	"io"
 	"net/http"
 	"strings"

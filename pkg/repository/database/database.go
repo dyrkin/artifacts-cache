@@ -1,11 +1,11 @@
 package database
 
 import (
+	"artifacts-cache/pkg/repository/database/migrations"
 	"database/sql"
 	"errors"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
-	"gitlab-cache/pkg/repository/database/migrations"
 )
 
 var (

@@ -1,15 +1,15 @@
 package main
 
 import (
+	"artifacts-cache/pkg/multipart"
+	"artifacts-cache/pkg/repository"
+	"artifacts-cache/pkg/repository/basedir"
+	"artifacts-cache/pkg/repository/database"
+	"artifacts-cache/pkg/repository/index"
+	"artifacts-cache/pkg/repository/server"
 	"fmt"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gitlab-cache/pkg/multipart"
-	"gitlab-cache/pkg/repository"
-	"gitlab-cache/pkg/repository/basedir"
-	"gitlab-cache/pkg/repository/database"
-	"gitlab-cache/pkg/repository/index"
-	"gitlab-cache/pkg/repository/server"
 )
 
 const (

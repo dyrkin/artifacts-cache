@@ -1,10 +1,10 @@
 package index
 
 import (
+	"artifacts-cache/pkg/repository/database"
 	"database/sql"
 	"errors"
 	"fmt"
-	"gitlab-cache/pkg/repository/database"
 	"time"
 )
 

@@ -1,12 +1,12 @@
 package multipart
 
 import (
+	"artifacts-cache/pkg/compression"
+	"artifacts-cache/pkg/file"
+	reader2 "artifacts-cache/pkg/reader"
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"gitlab-cache/pkg/compression"
-	"gitlab-cache/pkg/file"
-	reader2 "gitlab-cache/pkg/reader"
 	"io"
 	"path"
 )

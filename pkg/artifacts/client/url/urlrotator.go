@@ -1,7 +1,7 @@
 package url
 
 import (
-	"gitlab-cache/pkg/slice"
+	"artifacts-cache/pkg/slice"
 	"sync"
 )
 

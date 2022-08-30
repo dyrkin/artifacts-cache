@@ -1,9 +1,9 @@
 package artifacts
 
 import (
+	"artifacts-cache/pkg/artifacts/client"
 	"errors"
 	"github.com/rs/zerolog/log"
-	"gitlab-cache/pkg/artifacts/client"
 	"net/http"
 	"sync"
 )

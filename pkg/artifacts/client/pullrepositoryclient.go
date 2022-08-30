@@ -1,9 +1,9 @@
 package client
 
 import (
+	"artifacts-cache/pkg/multipart"
 	"errors"
 	"fmt"
-	"gitlab-cache/pkg/multipart"
 	"io"
 	"net/http"
 )

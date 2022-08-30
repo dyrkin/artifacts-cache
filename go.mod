@@ -1,4 +1,4 @@
-module gitlab-cache
+module artifacts-cache
 
 go 1.19
 

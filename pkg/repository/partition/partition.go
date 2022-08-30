@@ -1,11 +1,11 @@
 package partition
 
 import (
+	"artifacts-cache/pkg/file"
+	"artifacts-cache/pkg/repository/basedir"
+	"artifacts-cache/pkg/repository/index"
 	"errors"
 	"fmt"
-	"gitlab-cache/pkg/file"
-	"gitlab-cache/pkg/repository/basedir"
-	"gitlab-cache/pkg/repository/index"
 	"io"
 	"os"
 	"path"

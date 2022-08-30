@@ -1,12 +1,12 @@
 package main
 
 import (
+	"artifacts-cache/pkg/artifacts"
+	"artifacts-cache/pkg/artifacts/client"
+	"artifacts-cache/pkg/artifacts/client/url"
+	"artifacts-cache/pkg/file"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gitlab-cache/pkg/artifacts"
-	"gitlab-cache/pkg/artifacts/client"
-	"gitlab-cache/pkg/artifacts/client/url"
-	"gitlab-cache/pkg/file"
 	"os"
 	"path"
 	"path/filepath"

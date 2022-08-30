@@ -1,10 +1,10 @@
 package multipart
 
 import (
+	"artifacts-cache/pkg/file"
 	"bytes"
 	"compress/gzip"
 	"fmt"
-	"gitlab-cache/pkg/file"
 	"os"
 	"testing"
 )

@@ -1,11 +1,11 @@
 package client
 
 import (
+	"artifacts-cache/pkg/artifacts/client/url"
+	"artifacts-cache/pkg/compression"
+	"artifacts-cache/pkg/file"
 	"errors"
 	"fmt"
-	"gitlab-cache/pkg/artifacts/client/url"
-	"gitlab-cache/pkg/compression"
-	"gitlab-cache/pkg/file"
 	"io"
 	"net/http"
 	"os"

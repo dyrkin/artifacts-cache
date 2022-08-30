@@ -1,13 +1,13 @@
 package repository
 
 import (
+	"artifacts-cache/pkg/multipart"
+	"artifacts-cache/pkg/repository/basedir"
+	"artifacts-cache/pkg/repository/index"
+	"artifacts-cache/pkg/repository/partition"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"gitlab-cache/pkg/multipart"
-	"gitlab-cache/pkg/repository/basedir"
-	"gitlab-cache/pkg/repository/index"
-	"gitlab-cache/pkg/repository/partition"
 	"io"
 	"sync"
 )
