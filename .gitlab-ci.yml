@@ -36,3 +36,5 @@ pull:
   script:
     - go run cmd/artifacts/main.go pull 'files/*.txt'
     - ls -la files
+    - cat files/file1.txt
+    - cat files/file2.txt
