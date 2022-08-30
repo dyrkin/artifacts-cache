@@ -13,27 +13,26 @@ import (
 )
 
 const (
-	DbName     = "cache"
-	DbLogin    = "cache"
-	DbPassword = "pwd"
-	DbAddress  = "docker.home:5432"
-	BaseDir    = "/Users/unkind/java/projects/gitlab-cache/filedir"
+	BaseDir        = "/Users/unkind/java/projects/artifacts-cache/filedir"
+	DatabaseSubDir = "database"
+	DataSubdirDir  = "data"
 )
 
 func main() {
 	log.Level(zerolog.DebugLevel)
-	bd := basedir.MustNewBaseDir(BaseDir)
-	db := database.NewDatabase(fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", DbLogin, DbPassword, DbAddress, DbName))
-	err := db.Connect()
+	bd := basedir.MustNewBaseDir(BaseDir, DataSubdirDir, DatabaseSubDir)
+	err := bd.MakeDatabaseSubdir()
+	if err != nil {
+		log.Fatal().Msgf("can't create database subdir. error: %s", err)
+	}
+	db := database.NewDatabase(fmt.Sprintf("file:%s/cache.db?_journal_mode=WAL", bd.DatabaseSubdir()))
+	err = db.Connect()
 	if err != nil {
 		log.Fatal().Msgf("can't connect to db. error: %s", err)
 	}
 	err = db.Migrate()
 	if err != nil {
 		log.Fatal().Msgf("can't migrate database. error: %s", err)
-	}
-	if err != nil {
-		log.Fatal().Msgf("can't connect to db. error: %s", err)
 	}
 	idx := index.NewIndex(db)
 	err = idx.Init()

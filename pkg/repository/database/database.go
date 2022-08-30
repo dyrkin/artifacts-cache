@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"gitlab-cache/pkg/repository/database/migrations"
 )
 
@@ -30,7 +30,7 @@ func NewDatabase(connectionString string) *database {
 }
 
 func (d *database) Connect() error {
-	db, err := sql.Open("postgres", d.connectionString)
+	db, err := sql.Open("sqlite3", d.connectionString)
 	if err != nil {
 		return fmt.Errorf("%w. %s", CantConnectToDatabaseError, err)
 	}

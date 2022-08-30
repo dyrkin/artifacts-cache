@@ -50,7 +50,7 @@ func (i *index) Init() (err error) {
 	if i.getPartitionIdStatement, err = i.database.Statement("select id from partition where uuid = $1"); err != nil {
 		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
 	}
-	if i.findContentEmplacementStatement, err = i.database.Statement("select p.uuid, f.path, f.offset, f.size from partition p join file f on p.id = f.partition_id where f.subset = $1 and f.name like $2"); err != nil {
+	if i.findContentEmplacementStatement, err = i.database.Statement("select p.uuid, f.path, f.offset, f.size from partition p join file f on p.id = f.partition_id where f.subset = $1 and f.path like $2"); err != nil {
 		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
 	}
 	return nil

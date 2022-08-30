@@ -3,6 +3,7 @@ package client
 import (
 	"errors"
 	"fmt"
+	"gitlab-cache/pkg/artifacts/client/url"
 	"gitlab-cache/pkg/artifacts/compression"
 	"gitlab-cache/pkg/repository/file"
 	"io"
@@ -17,31 +18,28 @@ var (
 	InvalidResponseFromRepositoryError = errors.New("invalid response from repository")
 )
 
-type repositoryClient struct {
-	repository string
-	semaphore  chan bool
+type RepositoryClient interface {
+	Push(cwd string, subset string, path string) error
 }
 
-func NewRepositoryClient(repository string, limitThreads int) *repositoryClient {
+type repositoryClient struct {
+	repositoryUrlRotator url.Rotator
+}
+
+func NewRepositoryClient(repositoryUrlRotator url.Rotator) *repositoryClient {
 	return &repositoryClient{
-		repository: repository,
-		semaphore:  make(chan bool, limitThreads),
+		repositoryUrlRotator: repositoryUrlRotator,
 	}
 }
 
-func (c *repositoryClient) Push(subset string, cwd string, path string) error {
-	c.semaphore <- true
-	defer func() {
-		<-c.semaphore
-	}()
+func (c *repositoryClient) Push(cwd string, subset string, path string) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("%w. %s", CantOpenFileError, err)
 	}
 	defer f.Close()
 	compressingReader := compression.CompressingReader(f)
-	defer compressingReader.Close()
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/push", c.repository), compressingReader)
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/push", c.repositoryUrlRotator.Next()), compressingReader)
 	if err != nil {
 		return fmt.Errorf("%w. %s", CantCreatePostRequestError, err)
 	}
@@ -49,7 +47,7 @@ func (c *repositoryClient) Push(subset string, cwd string, path string) error {
 	req.Header.Set("path", file.RemoveCwd(cwd, path))
 	response, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("%w. %s", CantSendFileToRepositoryError, err)
+		return fmt.Errorf("can't send request. error: %w", err)
 	}
 	if response.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(response.Body)

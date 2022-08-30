@@ -3,7 +3,6 @@ package compression
 import (
 	"compress/gzip"
 	"errors"
-	"fmt"
 	"io"
 )
 
@@ -17,35 +16,21 @@ type compressor struct {
 	uncompressedDataWriter io.WriteCloser
 }
 
-func CompressingReader(uncompressedDataReader io.Reader) io.ReadCloser {
-	compressedDataReader, compressingDataWriter := io.Pipe()
-
-	uncompressedDataWriter, _ := gzip.NewWriterLevel(compressingDataWriter, gzip.BestSpeed)
-
-	compressor := &compressor{err: nil, compressedDataReader: compressedDataReader, uncompressedDataWriter: uncompressedDataWriter}
-
+func CompressingReader(uncompressedDataReader io.ReadCloser) io.ReadCloser {
+	r, w := io.Pipe()
 	go func() {
-		_, compressor.err = io.Copy(uncompressedDataWriter, uncompressedDataReader)
-		if compressor.err != nil {
-			compressor.err = fmt.Errorf("%w. %s", CantCompressFileError, compressor.err)
+
+		gzw := gzip.NewWriter(w)
+		_, err := io.Copy(gzw, uncompressedDataReader)
+
+		if err != nil {
+			w.CloseWithError(err)
 			return
 		}
+
+		w.CloseWithError(gzw.Close())
 	}()
-
-	return compressor
-}
-
-func (c *compressor) Read(p []byte) (n int, err error) {
-	if c.err != nil {
-		return 0, c.err
-	}
-	return c.compressedDataReader.Read(p)
-}
-
-func (c *compressor) Close() error {
-	_ = c.uncompressedDataWriter.Close()
-	_ = c.compressedDataReader.Close()
-	return nil
+	return r
 }
 
 func DecompressingReader(reader io.Reader) (io.ReadCloser, error) {

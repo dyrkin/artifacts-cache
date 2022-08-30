@@ -3,6 +3,9 @@ package main
 import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"gitlab-cache/pkg/artifacts"
+	"gitlab-cache/pkg/artifacts/client"
+	"gitlab-cache/pkg/artifacts/client/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -11,9 +14,9 @@ import (
 
 func main() {
 	log.Level(zerolog.DebugLevel)
-	scope := os.Getenv("ARTIFACTS_SCOPE_ID")
-	if scope == "" {
-		log.Fatal().Msg("ARTIFACTS_SCOPE_ID is not set")
+	subset := os.Getenv("ARTIFACTS_SUBSET_ID")
+	if subset == "" {
+		log.Fatal().Msg("ARTIFACTS_SUBSET_ID is not set")
 	}
 	repositoriesCommaSeparated := os.Getenv("ARTIFACTS_REPOSITORIES")
 	if repositoriesCommaSeparated == "" {
@@ -32,27 +35,29 @@ func main() {
 		}
 		switch cmd {
 		case "pull":
-			pull(cwd, pattern)
+			pull(cwd, subset, pattern, repositories)
 		case "push":
-			push(cwd, pattern, repositories)
+			push(cwd, subset, pattern, repositories)
 		}
 	} else {
 		log.Fatal().Msgf("usage: %s <pull|push> <path|--all>", path.Base(os.Args[0]))
 	}
 }
 
-func push(cwd string, pattern string, repositories []string) {
+func push(cwd string, subset string, pattern string, repositories []string) {
 	switch pattern {
 	case "--all":
 	default:
-		files, err := filepath.Glob(path.Join(cwd, pattern))
+		paths, err := filepath.Glob(path.Join(cwd, pattern))
 		if err != nil {
-			log.Fatal().Msgf("can't find files using pattern [%s]. error: %s", pattern, err)
+			log.Fatal().Msgf("can't find paths using pattern [%s]. error: %s", pattern, err)
 		}
-		log.Info().Msgf("%s", files)
+		rotator := url.NewUrlRotator(repositories)
+		limitThreads := len(repositories) * 3
+		artifacts.NewUploader(client.NewRepositoryClient(rotator), limitThreads).Upload(cwd, subset, paths)
 	}
 }
 
-func pull(cwd string, pattern string) {
+func pull(cwd string, subset string, pattern string, repositories []string) {
 
 }

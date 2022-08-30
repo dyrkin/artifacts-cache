@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	_ "github.com/golang-migrate/migrate/v4/source/iofs"
 	_ "github.com/lib/pq"
@@ -25,8 +25,8 @@ func MustMigrate(db *sql.DB) error {
 	if err != nil {
 		log.Fatal().Err(err)
 	}
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
-	m, err := migrate.NewWithInstance("iofs", d, "postgres", driver)
+	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
+	m, err := migrate.NewWithInstance("iofs", d, "sqlite3", driver)
 	if err != nil {
 		log.Fatal().Err(err)
 	}
