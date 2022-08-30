@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"gitlab-cache/pkg/artifacts/client/url"
 	"gitlab-cache/pkg/artifacts/compression"
-	"gitlab-cache/pkg/repository/file"
+	"gitlab-cache/pkg/file"
 	"io"
 	"net/http"
 	"os"

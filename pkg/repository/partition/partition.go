@@ -3,8 +3,8 @@ package partition
 import (
 	"errors"
 	"fmt"
+	"gitlab-cache/pkg/file"
 	"gitlab-cache/pkg/repository/basedir"
-	"gitlab-cache/pkg/repository/file"
 	"gitlab-cache/pkg/repository/index"
 	"io"
 	"os"

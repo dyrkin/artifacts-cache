@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/fs"
 	"os"
+	"path/filepath"
 )
 
 func CreateEmpty(path string) (*os.File, error) {
@@ -27,4 +28,24 @@ func CloseQuiet(file *os.File) {
 
 func Open(path string) (*os.File, error) {
 	return os.Open(path)
+}
+
+func IsDir(path string) bool {
+	info, err := os.Stat(path)
+	return info != nil && !errors.Is(err, fs.ErrNotExist) && info.IsDir()
+}
+
+func FindFilesInDir(dir string) ([]string, error) {
+	var paths []string
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		paths = append(paths, path)
+		return nil
+	})
+	return paths, err
 }

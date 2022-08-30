@@ -6,6 +6,7 @@ import (
 	"gitlab-cache/pkg/artifacts"
 	"gitlab-cache/pkg/artifacts/client"
 	"gitlab-cache/pkg/artifacts/client/url"
+	"gitlab-cache/pkg/file"
 	"os"
 	"path"
 	"path/filepath"
@@ -48,14 +49,23 @@ func push(cwd string, subset string, pattern string, repositories []string) {
 	switch pattern {
 	case "--all":
 	default:
-		paths, err := filepath.Glob(path.Join(cwd, pattern))
+		paths, err := findFiles(cwd, pattern)
 		if err != nil {
 			log.Fatal().Msgf("can't find paths using pattern [%s]. error: %s", pattern, err)
 		}
 		rotator := url.NewUrlRotator(repositories)
 		limitThreads := len(repositories) * 3
 		artifacts.NewUploader(client.NewRepositoryClient(rotator), limitThreads).Upload(cwd, subset, paths)
+		log.Info().Msgf("uploaded %d files", len(paths))
 	}
+}
+
+func findFiles(cwd string, pattern string) ([]string, error) {
+	p := path.Join(cwd, pattern)
+	if file.IsDir(p) {
+		return file.FindFilesInDir(p)
+	}
+	return filepath.Glob(p)
 }
 
 func pull(cwd string, subset string, pattern string, repositories []string) {
