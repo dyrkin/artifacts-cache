@@ -7,6 +7,7 @@ import (
 	"gitlab-cache/pkg/repository"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type server struct {
@@ -53,6 +54,11 @@ func (s *server) pullHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = fmt.Fprint(w, "filter or subset query parameter is empty")
 		return
+	}
+	filter = strings.ReplaceAll(filter, "*", "%")
+	filter = strings.ReplaceAll(filter, "?", "_")
+	if strings.HasSuffix(filter, "/") {
+		filter = filter[:len(filter)-1] + "%"
 	}
 	content, err := s.repository.FindContent(subset, filter)
 	if err != nil && errors.Is(err, repository.NoContentOnServerError) {

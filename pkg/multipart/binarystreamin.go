@@ -3,6 +3,7 @@ package multipart
 import (
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"gitlab-cache/pkg/compression"
 	"gitlab-cache/pkg/file"
 	reader2 "gitlab-cache/pkg/reader"
@@ -15,6 +16,7 @@ var (
 	CantCreateDecompressorError = errors.New("can't create decompressor")
 	CantCreateFileError         = errors.New("can't create file")
 	CantSaveDataToFileError     = errors.New("can't save data to file")
+	CantCreateDirForFileError   = errors.New("can't create directory for file")
 )
 
 type binaryStreamIn struct {
@@ -40,6 +42,10 @@ func (b *binaryStreamIn) Save(reader io.Reader) error {
 		if err != nil {
 			return fmt.Errorf("%w. %s", CantCreateDecompressorError, err)
 		}
+		err = file.MkdirAllForFile(path.Join(b.cwd, descriptor.path))
+		if err != nil {
+			return fmt.Errorf("%w. %s", CantCreateDirForFileError, err)
+		}
 		f, err := file.CreateEmpty(path.Join(b.cwd, descriptor.path))
 		if err != nil {
 			return fmt.Errorf("%w. %s", CantCreateFileError, err)
@@ -49,5 +55,6 @@ func (b *binaryStreamIn) Save(reader io.Reader) error {
 			return fmt.Errorf("%w. %s", CantSaveDataToFileError, err)
 		}
 	}
+	log.Info().Msgf("downloaded %d files", len(contentDescriptors))
 	return nil
 }

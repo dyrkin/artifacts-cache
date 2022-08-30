@@ -49,3 +49,7 @@ func FindFilesInDir(dir string) ([]string, error) {
 	})
 	return paths, err
 }
+
+func MkdirAllForFile(path string) error {
+	return os.MkdirAll(filepath.Dir(path), os.ModePerm)
+}

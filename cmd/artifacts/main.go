@@ -61,9 +61,12 @@ func push(cwd string, subset string, pattern string, repositories []string) {
 }
 
 func pull(cwd string, subset string, pattern string, repositories []string) {
-	rotator := url.NewUrlRotator(repositories)
-	limitThreads := len(repositories) * 3
-	artifacts.NewPuller(client.NewPullRepositoryClient(rotator), limitThreads).Pull(cwd, subset, pattern)
+	switch pattern {
+	case "--all":
+		artifacts.NewPuller(client.NewPullRepositoryClientFactory(), repositories).Pull(cwd, subset, "*")
+	default:
+		artifacts.NewPuller(client.NewPullRepositoryClientFactory(), repositories).Pull(cwd, subset, pattern)
+	}
 }
 
 func findFiles(cwd string, pattern string) ([]string, error) {
