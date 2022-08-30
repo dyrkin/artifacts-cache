@@ -1,8 +1,11 @@
 variables:
-  CACHE_BUCKET_ID: "$CI_PROJECT_PATH-$CI_PIPELINE_ID"
+  ARTIFACTS_SUBSET_ID: "$CI_PROJECT_PATH-$CI_PIPELINE_ID"
+  ARTIFACTS_REPOSITORIES: "http://192.168.1.2:8080"
 
 stages:
   - test
+  - push
+  - pull
 
 test:
   image: golang:1.19
@@ -12,3 +15,24 @@ test:
   script:
     - go mod download
     - go test ./...
+
+push:
+  image: golang:1.19
+  stage: push
+  tags:
+    - docker
+  script:
+    - mkdir -p files
+    - echo "Content 1" > files/file1.txt
+    - echo "Content 2" > files/file2.txt
+    - echo "Content 3" > files/file3.png
+    - go run cmd/artifact/main.go push 'files/*.txt'
+
+pull:
+  image: golang:1.19
+  stage: pull
+  tags:
+    - docker
+  script:
+    - go run cmd/artifact/main.go pull 'files/*.txt'
+    - ls -la files
