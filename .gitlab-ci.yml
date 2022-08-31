@@ -26,7 +26,8 @@ push:
     - echo "Content 1" > files/file1.txt
     - echo "Content 2" > files/file2.txt
     - echo "Content 3" > files/file3.png
-    - go run cmd/artifacts/main.go push 'files/*.txt'
+    - ls -la /usr/local/bin
+    - artifacts push 'files/*.txt'
 
 pull:
   image: golang:1.19
@@ -34,7 +35,7 @@ pull:
   tags:
     - docker
   script:
-    - go run cmd/artifacts/main.go pull 'files/*.txt'
+    - artifacts pull 'files/*.txt'
     - ls -la files
     - cat files/file1.txt
     - cat files/file2.txt
