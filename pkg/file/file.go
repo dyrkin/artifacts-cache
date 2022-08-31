@@ -20,6 +20,10 @@ func RemoveQuiet(path string) {
 	_ = os.RemoveAll(path)
 }
 
+func Remove(path string) error {
+	return os.RemoveAll(path)
+}
+
 func CloseQuiet(file *os.File) {
 	if file != nil {
 		_ = file.Close()

@@ -11,6 +11,7 @@ import (
 type BaseDir interface {
 	Dir() string
 	MakeSubdirByUUID(uuid string) (string, error)
+	GetSubdirByUUID(uuid string) string
 }
 
 type baseDir struct {
@@ -27,12 +28,16 @@ func MustNewBaseDir(dir string, dataSubdir string, databaseSubdir string) *baseD
 }
 
 func (d *baseDir) MakeSubdirByUUID(uuid string) (string, error) {
-	parts := strings.Split(uuid, "-")
-	subdir := path.Join(d.dir, d.dataSubdir, parts[1], parts[2])
+	subdir := d.GetSubdirByUUID(uuid)
 	if err := os.MkdirAll(subdir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("can't create subdir [%s]. error: %w", subdir, err)
 	}
 	return subdir, nil
+}
+
+func (d *baseDir) GetSubdirByUUID(uuid string) string {
+	parts := strings.Split(uuid, "-")
+	return path.Join(d.dir, d.dataSubdir, parts[1], parts[2])
 }
 
 func (d *baseDir) MakeDatabaseSubdir() error {

@@ -15,6 +15,8 @@ var (
 	CantAddFileToPartitionError      = errors.New("can't add file to partition")
 	CantAddPartitionError            = errors.New("can't add partition")
 	CantGetPartitionIdError          = errors.New("can't get partition id")
+	CantGetEldestUuidsError          = errors.New("can't get eldest uuids")
+	CantDeletePartitionError         = errors.New("can't delete partition")
 )
 
 type Index interface {
@@ -22,6 +24,8 @@ type Index interface {
 	AddFileToPartition(partitionId int64, subset string, path string, offset int64, size int64) error
 	PartitionExists(uuid string) (int64, bool, error)
 	FindContentEmplacement(subset string, filter string) (*ContentEmplacement, error)
+	GetEldestUuids(limit int) ([]string, error)
+	DeletePartition(uuid string) error
 }
 
 type index struct {
@@ -31,6 +35,9 @@ type index struct {
 	partitionExistsStatement        *sql.Stmt
 	getPartitionIdStatement         *sql.Stmt
 	findContentEmplacementStatement *sql.Stmt
+	getEldestUuidsStatement         *sql.Stmt
+	deletePartitionFilesStatement   *sql.Stmt
+	deletePartitionStatement        *sql.Stmt
 }
 
 func NewIndex(database database.Database) *index {
@@ -51,6 +58,15 @@ func (i *index) Init() (err error) {
 		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
 	}
 	if i.findContentEmplacementStatement, err = i.database.Statement("select p.uuid, f.path, f.offset, f.size from partition p join file f on p.id = f.partition_id where f.subset = $1 and f.path like $2"); err != nil {
+		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
+	}
+	if i.getEldestUuidsStatement, err = i.database.Statement("select uuid from partition order by rowid asc limit $1"); err != nil {
+		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
+	}
+	if i.deletePartitionFilesStatement, err = i.database.Statement("delete from file where partition_id = $1"); err != nil {
+		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
+	}
+	if i.deletePartitionStatement, err = i.database.Statement("delete from partition where id = $1"); err != nil {
 		return fmt.Errorf("%w. %s", CantInitializeIndexError, err)
 	}
 	return nil
@@ -112,4 +128,40 @@ func (i *index) GetPartitionId(uuid string) (int64, error) {
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+func (i *index) GetEldestUuids(limit int) ([]string, error) {
+	rows, err := i.getEldestUuidsStatement.Query(limit)
+	if err != nil {
+		return nil, fmt.Errorf("%w. [limit: %d]. %s", CantGetEldestUuidsError, limit, err)
+	}
+	defer rows.Close()
+	var uuids []string
+	for rows.Next() {
+		var uuid string
+		if err := rows.Scan(&uuid); err != nil {
+			return nil, fmt.Errorf("%w. [limit: %d]. %s", CantGetEldestUuidsError, limit, err)
+		}
+		uuids = append(uuids, uuid)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("%w. [limit: %d]. %s", CantGetEldestUuidsError, limit, err)
+	}
+	return uuids, nil
+}
+
+func (i *index) DeletePartition(uuid string) error {
+	partitionId, err := i.GetPartitionId(uuid)
+	if err != nil {
+		return fmt.Errorf("%w. [uuid: %s]. %s", CantDeletePartitionError, uuid, err)
+	}
+	_, err = i.deletePartitionFilesStatement.Exec(partitionId)
+	if err != nil {
+		return fmt.Errorf("%w. [uuid: %s]. %s", CantDeletePartitionError, uuid, err)
+	}
+	_, err = i.deletePartitionStatement.Exec(partitionId)
+	if err != nil {
+		return fmt.Errorf("%w. [uuid: %s]. %s", CantDeletePartitionError, uuid, err)
+	}
+	return nil
 }

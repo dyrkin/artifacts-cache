@@ -48,6 +48,7 @@ func main() {
 func push(cwd string, subset string, pattern string, repositories []string) {
 	switch pattern {
 	case "--all":
+		log.Fatal().Msg("--all is not supported for push")
 	default:
 		paths, err := findFiles(cwd, pattern)
 		if err != nil {
