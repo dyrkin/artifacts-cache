@@ -1,4 +1,4 @@
-FROM golang:1.19
+FROM alpine:3.16
 
 RUN mkdir -p /app
 RUN mkdir -p /app/data

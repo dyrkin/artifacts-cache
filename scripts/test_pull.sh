@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/sh -ex
 
 rm -rf files
 ./artifacts pull 'files/*.txt'
