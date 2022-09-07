@@ -27,7 +27,7 @@ func main() {
 	if len(os.Args) == 2 && os.Args[1] != "" {
 		base = os.Args[1]
 	} else {
-		log.Fatal().Msgf("usage: %s <base_dir>", path.Base(os.Args[0]))
+		log.Fatal().Msgf("usage: %s <data_dir>", path.Base(os.Args[0]))
 	}
 	log.Info().Msgf("base dir: %s", base)
 	log.Level(zerolog.DebugLevel)
